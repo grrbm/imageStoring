@@ -8,10 +8,32 @@ const multer = require("multer");
 const GridFsStorage = require("multer-gridfs-storage");
 const crypto = require("crypto");
 const cors = require("cors");
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const imageRouter = require("./routes/image");
 
 const app = express();
+
+// Extended: https://swagger.io/specification/#infoObject
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      version: "1.0.0",
+      title: "Customer API",
+      description: "Customer API Information",
+      contact: {
+        name: "Amazing Developer",
+      },
+      servers: ["http://localhost:8080"],
+    },
+  },
+  // ['.routes/*.js']
+  apis: ["index.js"],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
