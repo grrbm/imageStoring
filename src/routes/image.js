@@ -20,9 +20,15 @@ module.exports = (upload) => {
     });
   });
 
-  /*
-        POST: Upload a single image/file to Image collection
-    */
+  /**
+   * @swagger
+   * /image:
+   *    post:
+   *      description: Upload a single image/file to Image collection
+   *    responses:
+   *      '201':
+   *        description: Successfully created user
+   */
   imageRouter
     .route("/")
     .post(upload.single("file"), (req, res, next) => {

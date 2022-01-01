@@ -29,7 +29,7 @@ const swaggerOptions = {
     },
   },
   // ['.routes/*.js']
-  apis: ["index.js"],
+  apis: ["./src/index.js", "./src/routes/*.js"],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
@@ -112,6 +112,15 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
+/**
+ * @swagger
+ * /:
+ *    get:
+ *      description: Hello world
+ *    responses:
+ *      '201':
+ *        description: Successfully created user
+ */
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
