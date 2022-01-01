@@ -22,15 +22,15 @@ module.exports = (upload) => {
 
   /**
    * @swagger
-   * /image:
+   * /api/create:
    *    post:
    *      description: Upload a single image/file to Image collection
    *    responses:
-   *      '201':
-   *        description: Successfully created user
+   *      '200':
+   *        description: Successfully uploaded image
    */
   imageRouter
-    .route("/")
+    .route("/create")
     .post(upload.single("file"), (req, res, next) => {
       console.log(req.body);
       // check for existing images
@@ -73,9 +73,15 @@ module.exports = (upload) => {
         .catch((err) => res.status(500).json(err));
     });
 
-  /*
-        GET: Delete an image from the collection
-    */
+  /**
+   * @swagger
+   * /api/delete/:id:
+   *    delete:
+   *      description: Delete an image from the collection
+   *    responses:
+   *      '200':
+   *        description: Successfully deleted image
+   */
   imageRouter.route("/delete/:id").get((req, res, next) => {
     Image.findOne({ _id: req.params.id })
       .then((image) => {
@@ -100,9 +106,15 @@ module.exports = (upload) => {
       .catch((err) => res.status(500).json(err));
   });
 
-  /*
-        GET: Fetch most recently added record
-    */
+  /**
+   * @swagger
+   * /api/recent:
+   *    get:
+   *      description: Fetch most recently added record
+   *    responses:
+   *      '200':
+   *        description: Successfully fetched most recently added record
+   */
   imageRouter.route("/recent").get((req, res, next) => {
     Image.findOne({}, {}, { sort: { _id: -1 } })
       .then((image) => {
@@ -114,9 +126,15 @@ module.exports = (upload) => {
       .catch((err) => res.status(500).json(err));
   });
 
-  /*
-        POST: Upload multiple files upto 3
-    */
+  /**
+   * @swagger
+   * /api/multiple:
+   *    post:
+   *      description: Upload multiple files up to 3
+   *    responses:
+   *      '200':
+   *        description: Successfully uploaded multiple up to 3 files
+   */
   imageRouter
     .route("/multiple")
     .post(upload.array("file", 3), (req, res, next) => {
@@ -126,9 +144,15 @@ module.exports = (upload) => {
       });
     });
 
-  /*
-        GET: Fetches all the files in the uploads collection
-    */
+  /**
+   * @swagger
+   * /api/files:
+   *    get:
+   *      description: Fetches all the files in the uploads collection
+   *    responses:
+   *      '200':
+   *        description: Successfully fetched all the files in the uploads collection
+   */
   imageRouter.route("/files").get((req, res, next) => {
     gfs.find().toArray((err, files) => {
       if (!files || files.length === 0) {
@@ -157,9 +181,15 @@ module.exports = (upload) => {
     });
   });
 
-  /*
-        GET: Fetches a particular file by filename
-    */
+  /**
+   * @swagger
+   * /api/:filename:
+   *    get:
+   *      description: Fetches a particular file by filename
+   *    responses:
+   *      '200':
+   *        description: Successfully fetched a particular file by filename
+   */
   imageRouter.route("/file/:filename").get((req, res, next) => {
     gfs.find({ filename: req.params.filename }).toArray((err, files) => {
       if (!files[0] || files.length === 0) {
@@ -176,10 +206,16 @@ module.exports = (upload) => {
     });
   });
 
-  /* 
-        GET: Fetches a particular image and render on browser
-    */
-  imageRouter.route("/image/:filename").get((req, res, next) => {
+  /**
+   * @swagger
+   * /api/:filename:
+   *    get:
+   *      description: Fetches a particular image and render on browser
+   *    responses:
+   *      '200':
+   *        description: Successfully fetched a particular image for rendering.
+   */
+  imageRouter.route("/:filename").get((req, res, next) => {
     gfs.find({ filename: req.params.filename }).toArray((err, files) => {
       if (!files[0] || files.length === 0) {
         return res.status(200).json({
@@ -203,9 +239,15 @@ module.exports = (upload) => {
     });
   });
 
-  /*
-        DELETE: Delete a particular file by an ID
-    */
+  /**
+   * @swagger
+   * /api/file/del/:id:
+   *    delete:
+   *      description: Delete a particular file by an ID
+   *    responses:
+   *      '200':
+   *        description: Successfully deleted a particular file by an ID.
+   */
   imageRouter.route("/file/del/:id").post((req, res, next) => {
     console.log(req.params.id);
     gfs.delete(new mongoose.Types.ObjectId(req.params.id), (err, data) => {

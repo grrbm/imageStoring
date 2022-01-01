@@ -11,7 +11,7 @@ const cors = require("cors");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
-const imageRouter = require("./routes/image");
+const apiRouter = require("./routes/api");
 
 const app = express();
 
@@ -33,7 +33,7 @@ const swaggerOptions = {
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -94,7 +94,7 @@ const storage = new GridFsStorage({
 
 const upload = multer({ storage });
 
-app.use("/", imageRouter(upload));
+app.use("/api", apiRouter(upload));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -112,15 +112,6 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-/**
- * @swagger
- * /:
- *    get:
- *      description: Hello world
- *    responses:
- *      '201':
- *        description: Successfully created user
- */
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
