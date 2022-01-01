@@ -58,9 +58,19 @@ module.exports = (upload) => {
                 image,
               });
             })
-            .catch((err) => res.status(500).json(err));
+            .catch((err) =>
+              res.status(500).json({
+                success: false,
+                message: "Error saving the new image. " + err,
+              })
+            );
         })
-        .catch((err) => res.status(500).json(err));
+        .catch((err) =>
+          res.status(500).json({
+            success: false,
+            message: "Error finding image. " + err,
+          })
+        );
     })
     .get((req, res, next) => {
       Image.find({})
@@ -70,7 +80,12 @@ module.exports = (upload) => {
             images,
           });
         })
-        .catch((err) => res.status(500).json(err));
+        .catch((err) =>
+          res.status(500).json({
+            success: false,
+            message: "Error finding all images. " + err,
+          })
+        );
     });
 
   /**
