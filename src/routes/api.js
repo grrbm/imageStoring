@@ -32,6 +32,12 @@ module.exports = (upload) => {
   imageRouter
     .route("/create")
     .post(upload.single("file"), (req, res, next) => {
+      if (!req.file) {
+        return res.status(500).json({
+          success: false,
+          message: "Must upload a file !",
+        });
+      }
       console.log(req.body);
       // check for existing images
       Image.findOne({ caption: req.body.caption })
