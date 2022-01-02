@@ -103,28 +103,42 @@ module.exports = (upload) => {
    *      '200':
    *        description: Successfully deleted image
    */
-  imageRouter.route("/delete/:id").get((req, res, next) => {
-    Image.findOne({ _id: req.params.id })
+  imageRouter.route("/delete").delete((req, res, next) => {
+    if (!req.body.caption) {
+      return res.status(500).json({
+        success: false,
+        message: `Need to have field "caption" in message body !`,
+      });
+    }
+    Image.findOne({ caption: req.body.caption })
       .then((image) => {
         if (image) {
-          Image.deleteOne({ _id: req.params.id })
+          Image.deleteOne({ caption: req.body.caption })
             .then(() => {
               return res.status(200).json({
                 success: true,
-                message: `File with ID: ${req.params.id} deleted`,
+                message: `File with caption: ${req.body.caption} deleted`,
               });
             })
             .catch((err) => {
-              return res.status(500).json(err);
+              return res.status(500).json({
+                success: false,
+                message: `Error deleting the image. ` + err,
+              });
             });
         } else {
-          res.status(200).json({
+          res.status(404).json({
             success: false,
-            message: `File with ID: ${req.params.id} not found`,
+            message: `File with caption: ${req.body.caption} not found`,
           });
         }
       })
-      .catch((err) => res.status(500).json(err));
+      .catch((err) =>
+        res.status(500).json({
+          success: false,
+          message: "Error finding the image. " + err,
+        })
+      );
   });
 
   /**
