@@ -3,6 +3,8 @@ const imageRouter = express.Router();
 const mongoose = require("mongoose");
 const Image = require("../models/image");
 const config = require("../config");
+const mongodb = require("mongodb");
+var Grid = require("gridfs-stream");
 const fs = require("fs");
 
 module.exports = (upload) => {
@@ -16,9 +18,9 @@ module.exports = (upload) => {
 
   connect.once("open", () => {
     // initialize stream
-    gfs = new mongoose.mongo.GridFSBucket(connect.db, {
-      bucketName: "uploads",
-    });
+    gfs = Grid(mongoose.connection.db, mongoose.mongo);
+    //name of the bucket where media is going to be retrieved
+    gfs.collection("uploads");
   });
 
   /**
@@ -96,6 +98,7 @@ module.exports = (upload) => {
     });
   /**
    * @swagger
+   * /api/read:
    *    get:
    *      description: Accepts image GUID and returns image data
    *    responses:
@@ -103,25 +106,60 @@ module.exports = (upload) => {
    *        description: Successfully returned image*
    */
   imageRouter.route("/read").get((req, res, next) => {
-    if (!req.body.caption) {
-      return res.status(400).json({
-        success: false,
-        message: 'Must have field "caption" with image name !',
-      });
-    }
-    Image.findOne({ caption: req.body.caption }, { sort: { _id: -1 } })
-      .then((image) => {
-        res.status(200).json({
-          success: true,
-          image,
+    mongodb.MongoClient.connect(url, function (error, client) {
+      if (error) {
+        res.status(500).json(error);
+        return;
+      }
+      const db = client.db("ImageStoring");
+      db.collection("uploads.files")
+        .find({})
+        .toArray(function (err, results) {
+          console.log("got the results;");
         });
-      })
-      .catch((err) =>
-        res.status(500).json({
-          success: false,
-          message: "there was an error finding the image. " + err,
-        })
+      db.collection("uploads.files").findOne(
+        { filename: "f6d261ffa92a008a18b6f7dcef09aaf5.jpg" },
+        (err, image) => {
+          if (!image) {
+            res.status(404).send("Image was not found on the database !");
+            return;
+          }
+          // detect the content type and set the appropriate response headers.
+          let mimeType = image.contentType;
+          if (!mimeType) {
+            mimeType = mime.lookup(image.filename);
+          }
+          res.set({
+            "Content-Type": mimeType,
+            "Content-Disposition": "attachment; filename=" + image.filename,
+          });
+
+          //mongodb.ObjectId("61d0d9a56c3ac573e4630fd1")
+          const readStream = gfs.createReadStream({
+            filename: "f6d261ffa92a008a18b6f7dcef09aaf5.jpg",
+          });
+          readStream.on("error", (err) => {
+            // report stream error
+            console.log(err);
+          });
+          // the response will be the file itself.
+          readStream.pipe(res);
+        }
       );
+    });
+    // Image.findOne({ caption: req.body.caption }, { sort: { _id: -1 } })
+    //   .then((image) => {
+    //     res.status(200).json({
+    //       success: true,
+    //       image,
+    //     });
+    //   })
+    //   .catch((err) =>
+    //     res.status(500).json({
+    //       success: false,
+    //       message: "there was an error finding the image. " + err,
+    //     })
+    //   );
   });
   /**
    * @swagger
