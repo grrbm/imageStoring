@@ -194,19 +194,30 @@ module.exports = (upload) => {
     Image.findOne({ caption: req.body.caption })
       .then((image) => {
         if (image) {
-          Image.deleteOne({ caption: req.body.caption })
-            .then(() => {
-              return res.status(200).json({
-                success: true,
-                message: `File with caption: ${req.body.caption} deleted`,
-              });
-            })
-            .catch((err) => {
-              return res.status(500).json({
+          console.log("image ID: " + image.fileId);
+          gfs.delete(new mongoose.Types.ObjectId(image.fileId), (err, data) => {
+            if (err) {
+              return res.status(404).json({
                 success: false,
-                message: `Error deleting the image. ` + err,
+                message:
+                  "Error finding file in uploads.files collection." + err,
               });
-            });
+            }
+            console.log(`File with ID ${image.fileId} is deleted`);
+            Image.deleteOne({ caption: req.body.caption })
+              .then(() => {
+                return res.status(200).json({
+                  success: true,
+                  message: `Image with caption: ${req.body.caption} deleted`,
+                });
+              })
+              .catch((err) => {
+                return res.status(500).json({
+                  success: false,
+                  message: `Error deleting the image. ` + err,
+                });
+              });
+          });
         } else {
           res.status(404).json({
             success: false,
