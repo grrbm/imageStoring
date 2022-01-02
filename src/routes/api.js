@@ -3,6 +3,7 @@ const imageRouter = express.Router();
 const mongoose = require("mongoose");
 const Image = require("../models/image");
 const config = require("../config");
+const fs = require("fs");
 
 module.exports = (upload) => {
   const url = config.mongoURI;
@@ -108,7 +109,7 @@ module.exports = (upload) => {
         message: 'Must have field "caption" with image name !',
       });
     }
-    Image.findOne({ caption: req.bodyl.caption }, { sort: { _id: -1 } })
+    Image.findOne({ caption: req.body.caption }, { sort: { _id: -1 } })
       .then((image) => {
         res.status(200).json({
           success: true,
