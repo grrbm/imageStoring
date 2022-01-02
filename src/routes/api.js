@@ -105,13 +105,23 @@ module.exports = (upload) => {
    *      '200':
    *        description: Successfully returned image*
    */
-  imageRouter.route("/read").get((req, res, next) => {
+  imageRouter.route("/read").get(async (req, res, next) => {
     if (!req.body.caption) {
       return res.status(400).json({
         success: false,
         message: 'Must send "caption" parameter with image name !',
       });
     }
+    let result;
+    try {
+      result = await Image.findOne({ caption: req.body.caption });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "there was an error finding the image metadata. " + err,
+      });
+    }
+    const _filename = result._doc.filename;
     mongodb.MongoClient.connect(url, function (error, client) {
       if (error) {
         return res.status(500).json({
@@ -126,7 +136,7 @@ module.exports = (upload) => {
           console.log("got the results;");
         });
       db.collection("uploads.files").findOne(
-        { filename: req.body.caption },
+        { filename: _filename },
         (err, image) => {
           if (!image) {
             res.status(404).send("Image was not found on the database !");
@@ -143,8 +153,8 @@ module.exports = (upload) => {
           });
 
           gfs
-            .openDownloadStreamByName(req.body.caption)
-            .pipe(fs.createWriteStream("./output/" + req.body.caption))
+            .openDownloadStreamByName(_filename)
+            .pipe(fs.createWriteStream("./output/" + _filename))
             .on("error", function (error) {
               console.log("Error streaming the file. " + error);
             })
@@ -153,7 +163,7 @@ module.exports = (upload) => {
             });
 
           gfs
-            .openDownloadStreamByName(req.body.caption)
+            .openDownloadStreamByName(_filename)
             .pipe(res)
             .on("error", function (error) {
               console.log("Error streaming the file. " + error);
@@ -164,19 +174,6 @@ module.exports = (upload) => {
         }
       );
     });
-    // Image.findOne({ caption: req.body.caption }, { sort: { _id: -1 } })
-    //   .then((image) => {
-    //     res.status(200).json({
-    //       success: true,
-    //       image,
-    //     });
-    //   })
-    //   .catch((err) =>
-    //     res.status(500).json({
-    //       success: false,
-    //       message: "there was an error finding the image. " + err,
-    //     })
-    //   );
   });
   /**
    * @swagger
