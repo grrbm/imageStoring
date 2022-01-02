@@ -106,10 +106,18 @@ module.exports = (upload) => {
    *        description: Successfully returned image*
    */
   imageRouter.route("/read").get((req, res, next) => {
+    if (!req.body.caption) {
+      return res.status(400).json({
+        success: false,
+        message: 'Must send "caption" parameter with image name !',
+      });
+    }
     mongodb.MongoClient.connect(url, function (error, client) {
       if (error) {
-        res.status(500).json(error);
-        return;
+        return res.status(500).json({
+          success: false,
+          message: "Error connecting to database. " + error,
+        });
       }
       const db = client.db("ImageStoring");
       db.collection("uploads.files")
@@ -118,7 +126,7 @@ module.exports = (upload) => {
           console.log("got the results;");
         });
       db.collection("uploads.files").findOne(
-        { filename: "f6d261ffa92a008a18b6f7dcef09aaf5.jpg" },
+        { filename: req.body.caption },
         (err, image) => {
           if (!image) {
             res.status(404).send("Image was not found on the database !");
@@ -135,18 +143,23 @@ module.exports = (upload) => {
           });
 
           gfs
-            .openDownloadStreamByName("f6d261ffa92a008a18b6f7dcef09aaf5.jpg")
-            .pipe(
-              fs.createWriteStream(
-                "./output/f6d261ffa92a008a18b6f7dcef09aaf5.jpg"
-              )
-            )
+            .openDownloadStreamByName(req.body.caption)
+            .pipe(fs.createWriteStream("./output/" + req.body.caption))
             .on("error", function (error) {
               console.log("Error streaming the file. " + error);
             })
             .on("finish", function () {
               console.log("done!");
-              process.exit(0);
+            });
+
+          gfs
+            .openDownloadStreamByName(req.body.caption)
+            .pipe(res)
+            .on("error", function (error) {
+              console.log("Error streaming the file. " + error);
+            })
+            .on("finish", function () {
+              console.log("done!");
             });
         }
       );
