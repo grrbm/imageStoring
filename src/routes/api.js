@@ -93,7 +93,35 @@ module.exports = (upload) => {
           })
         );
     });
-
+  /**
+   * @swagger
+   *    get:
+   *      description: Accepts image GUID and returns image data
+   *    responses:
+   *      '200':
+   *        description: Successfully returned image*
+   */
+  imageRouter.route("/read").get((req, res, next) => {
+    if (!req.body.caption) {
+      return res.status(400).json({
+        success: false,
+        message: 'Must have field "caption" with image name !',
+      });
+    }
+    Image.findOne({ caption: req.bodyl.caption }, { sort: { _id: -1 } })
+      .then((image) => {
+        res.status(200).json({
+          success: true,
+          image,
+        });
+      })
+      .catch((err) =>
+        res.status(500).json({
+          success: false,
+          message: "there was an error finding the image. " + err,
+        })
+      );
+  });
   /**
    * @swagger
    * /api/delete/:id:
