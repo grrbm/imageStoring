@@ -18,9 +18,9 @@ module.exports = (upload) => {
 
   connect.once("open", () => {
     // initialize stream
-    gfs = Grid(mongoose.connection.db, mongoose.mongo);
-    //name of the bucket where media is going to be retrieved
-    gfs.collection("uploads");
+    gfs = new mongoose.mongo.GridFSBucket(connect.db, {
+      bucketName: "uploads",
+    });
   });
 
   /**
@@ -134,16 +134,20 @@ module.exports = (upload) => {
             "Content-Disposition": "attachment; filename=" + image.filename,
           });
 
-          //mongodb.ObjectId("61d0d9a56c3ac573e4630fd1")
-          const readStream = gfs.createReadStream({
-            filename: "f6d261ffa92a008a18b6f7dcef09aaf5.jpg",
-          });
-          readStream.on("error", (err) => {
-            // report stream error
-            console.log(err);
-          });
-          // the response will be the file itself.
-          readStream.pipe(res);
+          gfs
+            .openDownloadStreamByName("f6d261ffa92a008a18b6f7dcef09aaf5.jpg")
+            .pipe(
+              fs.createWriteStream(
+                "./output/f6d261ffa92a008a18b6f7dcef09aaf5.jpg"
+              )
+            )
+            .on("error", function (error) {
+              console.log("Error streaming the file. " + error);
+            })
+            .on("finish", function () {
+              console.log("done!");
+              process.exit(0);
+            });
         }
       );
     });
