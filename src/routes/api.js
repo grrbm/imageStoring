@@ -8,11 +8,24 @@ var Grid = require("gridfs-stream");
 const fs = require("fs");
 
 module.exports = (upload) => {
-  const url = config.mongoURI;
+  //const url = config.mongoURI;
+  const url = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/ImageStoring?authSource=admin`;
   const connect = mongoose.createConnection(url, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+  connect.then(
+    () => {
+      console.log("API: Connected to database: ImageStoring");
+    },
+    (err) =>
+      console.log(
+        "API: Failed connecting to the database. URL was: " +
+          url +
+          ". Details: " +
+          err
+      )
+  );
 
   let gfs;
 

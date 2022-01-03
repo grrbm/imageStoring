@@ -1,4 +1,5 @@
 const express = require("express");
+const createError = require("http-errors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
@@ -54,7 +55,8 @@ app.use(express.static(path.join(__dirname, "public")));
 const mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 
-const url = config.mongoURI;
+//const url = config.mongoURI;
+const url = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/ImageStoring?authSource=admin`;
 const connect = mongoose.connect(url, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -65,7 +67,10 @@ connect.then(
   () => {
     console.log("Connected to database: ImageStoring");
   },
-  (err) => console.log(err)
+  (err) =>
+    console.log(
+      "Failed connecting to the database. URL was: " + url + ". Details: " + err
+    )
 );
 
 /* 
