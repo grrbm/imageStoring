@@ -174,6 +174,7 @@ module.exports = (upload) => {
             "Content-Disposition": "attachment; filename=" + image.filename,
           });
 
+          /**Uncomment this to save images to "output" folder **
           gfs
             .openDownloadStreamByName(_filename)
             .pipe(fs.createWriteStream("./output/" + _filename))
@@ -183,7 +184,7 @@ module.exports = (upload) => {
             .on("finish", function () {
               console.log("done!");
             });
-
+          */
           gfs
             .openDownloadStreamByName(_filename)
             .pipe(res)
