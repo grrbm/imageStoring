@@ -1,11 +1,9 @@
-//var admin = db.getSiblingDB("admin");
-db.createUser({
-  user: "application_user",
-  pwd: "application_pass",
+var admin = db.getSiblingDB("admin");
+admin.createUser({
+  user: "myUserAdmin",
+  pwd: "pass", // or cleartext password
   roles: [
-    {
-      role: "dbOwner",
-      db: "ImageStoring",
-    },
+    { role: "userAdminAnyDatabase", db: "admin" },
+    { role: "readWriteAnyDatabase", db: "admin" },
   ],
 });
