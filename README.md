@@ -1,3 +1,5 @@
+<h1><b>How to Run this Project</b></h1>
+
 I made everything in Windows. Not sure if it works on Linux/Mac
 
 Open Git Bash on VSCode
@@ -6,7 +8,7 @@ In "scripts" folder:
 
     1) Run "bash initContainers.sh"
 
-This will run kill existing containers and clean
+This will run kill existing containers and clean.
 Then it will build the project and run it
 
 I had to use docker-compose. It is pretty much impossible to
