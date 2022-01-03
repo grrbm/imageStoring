@@ -56,7 +56,7 @@ const mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 
 //const url = config.mongoURI;
-const url = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/ImageStoring?authSource=admin`;
+const url = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.DAT_HOST}:${process.env.DAT_PORT}/ImageStoring?authSource=admin`;
 const connect = mongoose.connect(url, {
   useNewUrlParser: true,
   useUnifiedTopology: true,

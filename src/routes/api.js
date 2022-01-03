@@ -9,7 +9,7 @@ const fs = require("fs");
 
 module.exports = (upload) => {
   //const url = config.mongoURI;
-  const url = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/ImageStoring?authSource=admin`;
+  const url = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.DAT_HOST}:${process.env.DAT_PORT}/ImageStoring?authSource=admin`;
   const connect = mongoose.createConnection(url, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -41,9 +41,20 @@ module.exports = (upload) => {
    * /api/create:
    *    post:
    *      description: Upload a single image/file to Image collection
-   *    responses:
-   *      '200':
-   *        description: Successfully uploaded image
+   *      parameters:
+   *      - in: query
+   *        name: file
+   *        description: the image file as an attachment (form-data).
+   *      - in: query
+   *        name: caption
+   *        description: the GUID of the image you want to read
+   *      responses:
+   *        '200':
+   *           description: Successfully uploaded image
+   *        '409':
+   *           description: Image with this name already exists
+   *        '500':
+   *           description: Internal server error
    */
   imageRouter
     .route("/create")
@@ -60,7 +71,7 @@ module.exports = (upload) => {
         .then((image) => {
           console.log(image);
           if (image) {
-            return res.status(200).json({
+            return res.status(409).json({
               success: false,
               message: "Image already exists",
             });
@@ -113,10 +124,20 @@ module.exports = (upload) => {
    * @swagger
    * /api/read:
    *    get:
-   *      description: Accepts image GUID and returns image data
-   *    responses:
-   *      '200':
-   *        description: Successfully returned image*
+   *       description: Accepts image GUID and returns image data
+   *       parameters:
+   *        - in: query
+   *          name: caption
+   *          description: the GUID of the image you want to read
+   *       responses:
+   *          '200':
+   *             description: Successfully returned requested image
+   *          '400':
+   *             description: Malformed request. Must send "caption" parameter with GUID of requested image.
+   *          '404':
+   *             description: Did not find image with provided GUID.
+   *          '500':
+   *             description: Internal server error.
    */
   imageRouter.route("/read").get(async (req, res, next) => {
     if (!req.body.caption) {
@@ -216,14 +237,27 @@ module.exports = (upload) => {
    * @swagger
    * /api/update:
    *    put:
-   *      description: should accept image (using multipart/form-data) and return image GUID in JSON
-   *    responses:
-   *      '200':
-   *        description: Successfully updated image
+   *      description: Accepts image (using multipart/form-data) and return image GUID in JSON
+   *      parameters:
+   *       - in: query
+   *         name: file
+   *         description: the image file as an attachment (form-data).
+   *       - in: query
+   *         name: caption
+   *         description: the GUID of the image you want to update
+   *      responses:
+   *        '200':
+   *          description: Successfully updated image
+   *        '400':
+   *          description: Malformed request. Must send "caption" parameter with GUID of image to update.
+   *        '404':
+   *          description: Did not find image with provided GUID.
+   *        '500':
+   *          description: Internal server error.
    */
   imageRouter.route("/update").put(upload.single("file"), (req, res, next) => {
     if (!req.file) {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
         message: "Must upload a file !",
       });
@@ -261,7 +295,7 @@ module.exports = (upload) => {
         });
       })
       .catch((err) => {
-        return res.status(200).json({
+        return res.status(500).json({
           success: false,
           message: `Error updating image. ` + err,
         });
@@ -273,13 +307,23 @@ module.exports = (upload) => {
    * /api/delete:
    *    delete:
    *      description: Delete an image from the collection
-   *    responses:
-   *      '200':
-   *        description: Successfully deleted image
+   *      parameters:
+   *        - in: query
+   *          name: file
+   *          description: the image file as an attachment (form-data).
+   *      responses:
+   *          '200':
+   *             description: Successfully deleted image
+   *          '400':
+   *             description: Malformed request. Need to have "caption" with the image GUID in the request body.
+   *          '404':
+   *             description: Didn't find file with the requested GUID
+   *          '500':
+   *             description: Internal server error
    */
   imageRouter.route("/delete").delete((req, res, next) => {
     if (!req.body.caption) {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
         message: `Need to have field "caption" in message body !`,
       });
@@ -326,15 +370,6 @@ module.exports = (upload) => {
       );
   });
 
-  /**
-   * @swagger
-   * /api/recent:
-   *    get:
-   *      description: Fetch most recently added record
-   *    responses:
-   *      '200':
-   *        description: Successfully fetched most recently added record
-   */
   imageRouter.route("/recent").get((req, res, next) => {
     Image.findOne({}, {}, { sort: { _id: -1 } })
       .then((image) => {
@@ -346,15 +381,6 @@ module.exports = (upload) => {
       .catch((err) => res.status(500).json(err));
   });
 
-  /**
-   * @swagger
-   * /api/multiple:
-   *    post:
-   *      description: Upload multiple files up to 3
-   *    responses:
-   *      '200':
-   *        description: Successfully uploaded multiple up to 3 files
-   */
   imageRouter
     .route("/multiple")
     .post(upload.array("file", 3), (req, res, next) => {
@@ -364,15 +390,6 @@ module.exports = (upload) => {
       });
     });
 
-  /**
-   * @swagger
-   * /api/files:
-   *    get:
-   *      description: Fetches all the files in the uploads collection
-   *    responses:
-   *      '200':
-   *        description: Successfully fetched all the files in the uploads collection
-   */
   imageRouter.route("/files").get((req, res, next) => {
     gfs.find().toArray((err, files) => {
       if (!files || files.length === 0) {
@@ -401,15 +418,6 @@ module.exports = (upload) => {
     });
   });
 
-  /**
-   * @swagger
-   * /api/:filename:
-   *    get:
-   *      description: Fetches a particular file by filename
-   *    responses:
-   *      '200':
-   *        description: Successfully fetched a particular file by filename
-   */
   imageRouter.route("/file/:filename").get((req, res, next) => {
     gfs.find({ filename: req.params.filename }).toArray((err, files) => {
       if (!files[0] || files.length === 0) {
@@ -426,15 +434,6 @@ module.exports = (upload) => {
     });
   });
 
-  /**
-   * @swagger
-   * /api/:filename:
-   *    get:
-   *      description: Fetches a particular image and render on browser
-   *    responses:
-   *      '200':
-   *        description: Successfully fetched a particular image for rendering.
-   */
   imageRouter.route("/:filename").get((req, res, next) => {
     gfs.find({ filename: req.params.filename }).toArray((err, files) => {
       if (!files[0] || files.length === 0) {
@@ -459,15 +458,6 @@ module.exports = (upload) => {
     });
   });
 
-  /**
-   * @swagger
-   * /api/file/del/:id:
-   *    delete:
-   *      description: Delete a particular file by an ID
-   *    responses:
-   *      '200':
-   *        description: Successfully deleted a particular file by an ID.
-   */
   imageRouter.route("/file/del/:id").post((req, res, next) => {
     console.log(req.params.id);
     gfs.delete(new mongoose.Types.ObjectId(req.params.id), (err, data) => {

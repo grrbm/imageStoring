@@ -10,6 +10,8 @@ services:
               - NODE_ENV=production
               - MONGODB_USERNAME=myUserAdmin
               - MONGODB_PASSWORD=pass
+              - DAT_HOST=mongodb
+              - DAT_PORT=27017
           ports:
               - 8080:8080
           volumes:
