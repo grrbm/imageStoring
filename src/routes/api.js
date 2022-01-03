@@ -175,9 +175,66 @@ module.exports = (upload) => {
       );
     });
   });
+
   /**
    * @swagger
-   * /api/delete/:id:
+   * /api/update:
+   *    put:
+   *      description: should accept image (using multipart/form-data) and return image GUID in JSON
+   *    responses:
+   *      '200':
+   *        description: Successfully updated image
+   */
+  imageRouter.route("/update").put(upload.single("file"), (req, res, next) => {
+    if (!req.file) {
+      return res.status(500).json({
+        success: false,
+        message: "Must upload a file !",
+      });
+    }
+
+    //Update image metadata
+    Image.findOneAndUpdate(
+      { caption: req.body.caption },
+      {
+        $set: {
+          // caption: req.body.caption,
+          filename: req.file.filename,
+          fileId: req.file.id,
+        },
+      },
+      //make image parameter return the old object instead of the new
+      { new: false }
+    )
+      .then((image) => {
+        //"image" parameter is the new updated image
+
+        //Done updating metadata, now delete old image files
+        gfs.delete(new mongoose.Types.ObjectId(image.fileId), (err, data) => {
+          if (err) {
+            console.log(
+              "Error finding file in uploads.files collection." + err
+            );
+          }
+          console.log(`Old file with ID ${image.fileId} is deleted`);
+        });
+        //Files deleted and image updated. Return success
+        return res.status(200).json({
+          success: true,
+          message: `Image with caption: ${req.body.caption} updated`,
+        });
+      })
+      .catch((err) => {
+        return res.status(200).json({
+          success: false,
+          message: `Error updating image. ` + err,
+        });
+      });
+  });
+
+  /**
+   * @swagger
+   * /api/delete:
    *    delete:
    *      description: Delete an image from the collection
    *    responses:
