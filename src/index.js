@@ -79,7 +79,7 @@ connect.then(
 
 // create storage engine
 const storage = new GridFsStorage({
-  url: config.mongoURI,
+  url: url,
   file: (req, file) => {
     return new Promise((resolve, reject) => {
       crypto.randomBytes(16, (err, buf) => {
