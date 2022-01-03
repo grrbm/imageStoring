@@ -1,16 +1,23 @@
-FROM node:12-alpine
+#1
+FROM node:12.13.0-alpine
 
-WORKDIR /app
+#2
+RUN mkdir -p /srv/app/admin-server
+WORKDIR /srv/app/admin-server
 
-COPY package.json .
+#INSTALL CURL
+RUN apk add --no-cache curl
 
-RUN npm install
+#3
+COPY package.json /srv/app/admin-server
+COPY package-lock.json /srv/app/admin-server
+COPY .env /srv/app/admin-server
 
-COPY . .
+#4
+RUN npm install --silent
 
-EXPOSE 8080
+#5
+COPY . /srv/app/admin-server
 
-ENV MONGODB_USERNAME=root
-ENV MONGODB_PASSWORD=pass
-
-CMD ["npm", "start"]
+#6
+CMD [ "npm", "start" ]
