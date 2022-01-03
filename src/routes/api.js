@@ -128,6 +128,15 @@ module.exports = (upload) => {
     let result;
     try {
       result = await Image.findOne({ caption: req.body.caption });
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Image metadata with caption " +
+            req.body.caption +
+            " was not found.",
+        });
+      }
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -188,7 +197,20 @@ module.exports = (upload) => {
       );
     });
   });
-
+  imageRouter.route("/exists").get(async (req, res, next) => {
+    if (!req.body.caption) {
+      return res.status(400).send();
+    }
+    try {
+      let result = await Image.findOne({ caption: req.body.caption });
+      if (!result) {
+        return res.status(404).send();
+      }
+      return res.status(200).send();
+    } catch (error) {
+      return res.status(500).send();
+    }
+  });
   /**
    * @swagger
    * /api/update:
