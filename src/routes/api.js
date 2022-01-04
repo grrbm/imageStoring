@@ -43,7 +43,14 @@ module.exports = (upload) => {
       ? parseInt(req.headers["content-length"], 10)
       : null;
 
-    if ((len && len > minimumSizeBytes) || process.env.SHOULD_FORCE_GRIDFS) {
+    if (process.env.SHOULD_FORCE_GRIDFS.toLowerCase() === true) {
+      console.log(
+        "[size check]: SHOULD_FORCE_GRIDFS is set to true. Forcing the use of GridFS"
+      );
+      next();
+      return;
+    }
+    if (len && len > minimumSizeBytes) {
       console.log("[size check]: the image is over 16mb. Will use GridFS");
       next();
     } else {
@@ -394,28 +401,44 @@ module.exports = (upload) => {
           message: "Must upload a file !",
         });
       }
-      //Update small image data
-      Image.findOneAndUpdate(
-        { caption: req.body.caption },
-        {
-          $set: {
-            smallImageData: req.file.buffer,
-            smallImageMimetype: req.file.mimetype,
-          },
-        },
-        //make image parameter return the old object instead of the new
-        { new: false }
-      )
+      Image.findOne({ caption: req.body.caption })
         .then((image) => {
-          return res.status(200).json({
-            success: true,
-            message: `Image with caption: ${req.body.caption} updated`,
-          });
+          if (!image) {
+            return res.status(404).json({
+              success: false,
+              message: `The image to be updated was not found. `,
+            });
+          }
+          console.log("Found image. Updating");
+          //Update small image data
+          Image.findOneAndUpdate(
+            { caption: req.body.caption },
+            {
+              $set: {
+                smallImageData: req.file.buffer,
+                smallImageMimetype: req.file.mimetype,
+              },
+            },
+            //make image parameter return the old object instead of the new
+            { new: false }
+          )
+            .then((image) => {
+              return res.status(200).json({
+                success: true,
+                message: `Image with caption: ${req.body.caption} updated`,
+              });
+            })
+            .catch((err) => {
+              return res.status(500).json({
+                success: false,
+                message: `Error updating image. ` + err,
+              });
+            });
         })
         .catch((err) => {
-          return res.status(500).json({
+          return res.status(404).json({
             success: false,
-            message: `Error updating image. ` + err,
+            message: `The image to be updated was not found. ` + err,
           });
         });
     });
