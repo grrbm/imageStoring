@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const createError = require("http-errors");
 const path = require("path");
@@ -97,7 +98,14 @@ const storage = new GridFsStorage({
   },
 });
 
-const upload = multer({ storage });
+function fileFilter(req, file, cb) {
+  if (file.mimetype !== "image/png") {
+    return cb(new Error("File type must be image/png"), false);
+  }
+  cb(null, true);
+}
+
+const upload = multer({ storage, fileFilter });
 
 app.use("/api", apiRouter(upload));
 
@@ -121,7 +129,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-const port = 8080;
+const port = process.env.APP_PORT || 8080;
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
