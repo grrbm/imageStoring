@@ -44,10 +44,12 @@ module.exports = (upload) => {
       : null;
 
     if (len && len > minimumSizeBytes) {
-      console.log("passed minimum size check");
+      console.log("[size check]: the image is over 16mb. Will use GridFS");
       next();
     } else {
-      console.log("failed minimum size check");
+      console.log(
+        "[size check]: the image is less than 16mb. Will store the image as a binary document."
+      );
       next("route");
     }
   }
