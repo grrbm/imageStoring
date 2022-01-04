@@ -156,14 +156,15 @@ module.exports = (upload) => {
               message: "Image already exists",
             });
           }
-
+          let randomString = (Math.random() + 1).toString(36).substring(2);
           var imageData = req.file.buffer;
           let newImage = new Image({
             caption: req.body.caption,
-            filename: req.file.filename,
-            fileId: req.file.id,
-            smallImage: true,
+            filename: req.body.caption,
+            fileId: randomString,
+            isSmallImage: true,
             smallImageData: imageData,
+            smallImageMimetype: req.file.mimetype,
           });
 
           newImage
@@ -231,6 +232,17 @@ module.exports = (upload) => {
         success: false,
         message: "there was an error finding the image metadata. " + err,
       });
+    }
+    const isSmallImage = result._doc.isSmallImage;
+    //var data = something;
+    if (isSmallImage) {
+      res.writeHead(200, {
+        "Content-Type": result._doc.smallImageMimetype,
+        "Content-disposition": "attachment;filename=" + result._doc.filename,
+        "Content-Length": result._doc.smallImageData.length,
+      });
+      res.end(Buffer.from(result._doc.smallImageData, "binary"));
+      return;
     }
     const _filename = result._doc.filename;
     mongodb.MongoClient.connect(url, function (error, client) {
