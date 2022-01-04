@@ -353,6 +353,21 @@ module.exports = (upload) => {
         });
       }
 
+      Image.findOne({ caption: req.body.caption })
+        .then((image) => {
+          if (!image) {
+            return res.status(404).json({
+              success: false,
+              message: `The image to be updated was not found. `,
+            });
+          }
+        })
+        .catch((err) => {
+          return res.status(400).json({
+            success: false,
+            message: `Could not find image due to malformed request. ` + err,
+          });
+        });
       //Update image metadata
       Image.findOneAndUpdate(
         { caption: req.body.caption },
@@ -436,9 +451,9 @@ module.exports = (upload) => {
             });
         })
         .catch((err) => {
-          return res.status(404).json({
+          return res.status(400).json({
             success: false,
-            message: `The image to be updated was not found. ` + err,
+            message: `Could not find image due to malformed request. ` + err,
           });
         });
     });
