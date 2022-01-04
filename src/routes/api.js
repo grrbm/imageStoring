@@ -43,7 +43,7 @@ module.exports = (upload) => {
       ? parseInt(req.headers["content-length"], 10)
       : null;
 
-    if (len && len > minimumSizeBytes) {
+    if ((len && len > minimumSizeBytes) || process.env.SHOULD_FORCE_GRIDFS) {
       console.log("[size check]: the image is over 16mb. Will use GridFS");
       next();
     } else {
