@@ -199,13 +199,16 @@ module.exports = (upload) => {
     });
   /**
    * @swagger
-   * /api/read:
+   * /api/read/{guid}:
    *    get:
    *       description: Accepts image GUID and returns image data
    *       parameters:
-   *        - in: query
+   *        - in: path
+   *          required: true
    *          name: guid
    *          description: the GUID of the image you want to read
+   *          schema:
+   *            type: string
    *       responses:
    *          '200':
    *             description: Successfully returned requested image
@@ -216,7 +219,10 @@ module.exports = (upload) => {
    *          '500':
    *             description: Internal server error.
    */
-  imageRouter.route("/read").get(async (req, res, next) => {
+  imageRouter.route("/read/:guid").get(async (req, res, next) => {
+    if (req.params.guid) {
+      req.body.guid = req.params.guid;
+    }
     if (!req.body.guid) {
       return res.status(400).json({
         success: false,

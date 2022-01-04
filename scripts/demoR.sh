@@ -9,7 +9,7 @@ do
     #if [[ 11 -gt 10 ]]
     then
         echo "Image exists. Fetching"
-        curl -X GET -d guid="image$i" http://localhost:8080/api/read --output "../output/outputImage$i.jpg" --max-time 3
+        curl -X GET -d guid="image$i" http://localhost:8080/api/read/image$i --output "../output/outputImage$i.jpg" --max-time 3
         echo -e "\ndone reading file $file. check output folder"
     else
         echo "Failed. Does image exist in the database ?"
