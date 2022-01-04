@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Image = require("../models/image");
 const config = require("../config");
 const mongodb = require("mongodb");
+const multer = require("multer");
 var Grid = require("gridfs-stream");
 const fs = require("fs");
 
@@ -36,59 +37,8 @@ module.exports = (upload) => {
     });
   });
 
-  function createSmallImage(req, res) {
-    if (!req.file) {
-      return res.status(500).json({
-        success: false,
-        message: "Must upload a file !",
-      });
-    }
-    console.log(req.body);
-    // check for existing images
-    Image.findOne({ caption: req.body.caption })
-      .then((image) => {
-        console.log(image);
-        if (image) {
-          return res.status(409).json({
-            success: false,
-            message: "Image already exists",
-          });
-        }
-
-        //var imageData = fs.readFileSync(result);
-        let newImage = new Image({
-          caption: req.body.caption,
-          filename: req.file.filename,
-          fileId: req.file.id,
-          smallImage: true,
-          smallImageData: imageData,
-        });
-
-        newImage
-          .save()
-          .then((image) => {
-            res.status(200).json({
-              success: true,
-              image,
-            });
-          })
-          .catch((err) =>
-            res.status(500).json({
-              success: false,
-              message: "Error saving the new image. " + err,
-            })
-          );
-      })
-      .catch((err) =>
-        res.status(500).json({
-          success: false,
-          message: "Error finding image. " + err,
-        })
-      );
-  }
   function minimumSizeCheck(req, res, next) {
     let minimumSizeBytes = 16777216; //16 megabytes
-    console.log("passed through minimum size check");
     let len = req.headers["content-length"]
       ? parseInt(req.headers["content-length"], 10)
       : null;
@@ -98,7 +48,8 @@ module.exports = (upload) => {
       next();
     } else {
       console.log("failed minimum size check");
-      createSmallImage(req, res);
+      next("route");
+      //createSmallImage(req, res);
     }
   }
   /**
@@ -182,6 +133,58 @@ module.exports = (upload) => {
           res.status(500).json({
             success: false,
             message: "Error finding all images. " + err,
+          })
+        );
+    });
+  imageRouter
+    .route("/create")
+    .post(multer({}).single("file"), (req, res, next) => {
+      if (!req.file) {
+        return res.status(500).json({
+          success: false,
+          message: "Must upload a file !",
+        });
+      }
+      console.log(req.body);
+      // check for existing images
+      Image.findOne({ caption: req.body.caption })
+        .then((image) => {
+          console.log(image);
+          if (image) {
+            return res.status(409).json({
+              success: false,
+              message: "Image already exists",
+            });
+          }
+
+          var imageData = req.file.buffer;
+          let newImage = new Image({
+            caption: req.body.caption,
+            filename: req.file.filename,
+            fileId: req.file.id,
+            smallImage: true,
+            smallImageData: imageData,
+          });
+
+          newImage
+            .save()
+            .then((image) => {
+              res.status(200).json({
+                success: true,
+                image,
+              });
+            })
+            .catch((err) =>
+              res.status(500).json({
+                success: false,
+                message: "Error saving the new image. " + err,
+              })
+            );
+        })
+        .catch((err) =>
+          res.status(500).json({
+            success: false,
+            message: "Error finding image. " + err,
           })
         );
     });
