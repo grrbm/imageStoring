@@ -14,6 +14,11 @@ const ImageSchema = new Schema({
     required: true,
     type: String,
   },
+  smallImage: {
+    default: false,
+    type: Boolean,
+  },
+  smallImageData: { type: Buffer },
   createdAt: {
     default: Date.now(),
     type: Date,
