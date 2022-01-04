@@ -70,7 +70,7 @@ module.exports = (upload) => {
    *        name: file
    *        description: the image file as an attachment (form-data).
    *      - in: query
-   *        name: caption
+   *        name: guid
    *        description: the GUID of the image you want to read
    *      responses:
    *        '200':
@@ -91,7 +91,7 @@ module.exports = (upload) => {
       }
       console.log(req.body);
       // check for existing images
-      Image.findOne({ caption: req.body.caption })
+      Image.findOne({ guid: req.body.guid })
         .then((image) => {
           console.log(image);
           if (image) {
@@ -102,7 +102,7 @@ module.exports = (upload) => {
           }
 
           let newImage = new Image({
-            caption: req.body.caption,
+            guid: req.body.guid,
             filename: req.file.filename,
             fileId: req.file.id,
           });
@@ -155,7 +155,7 @@ module.exports = (upload) => {
       }
       console.log(req.body);
       // check for existing images
-      Image.findOne({ caption: req.body.caption })
+      Image.findOne({ guid: req.body.guid })
         .then((image) => {
           console.log(image);
           if (image) {
@@ -167,8 +167,8 @@ module.exports = (upload) => {
           let randomString = (Math.random() + 1).toString(36).substring(2);
           var imageData = req.file.buffer;
           let newImage = new Image({
-            caption: req.body.caption,
-            filename: req.body.caption,
+            guid: req.body.guid,
+            filename: req.body.guid,
             fileId: randomString,
             isSmallImage: true,
             smallImageData: imageData,
@@ -204,35 +204,33 @@ module.exports = (upload) => {
    *       description: Accepts image GUID and returns image data
    *       parameters:
    *        - in: query
-   *          name: caption
+   *          name: guid
    *          description: the GUID of the image you want to read
    *       responses:
    *          '200':
    *             description: Successfully returned requested image
    *          '400':
-   *             description: Malformed request. Must send "caption" parameter with GUID of requested image.
+   *             description: Malformed request. Must send "guid" parameter with GUID of requested image.
    *          '404':
    *             description: Did not find image with provided GUID.
    *          '500':
    *             description: Internal server error.
    */
   imageRouter.route("/read").get(async (req, res, next) => {
-    if (!req.body.caption) {
+    if (!req.body.guid) {
       return res.status(400).json({
         success: false,
-        message: 'Must send "caption" parameter with image name !',
+        message: 'Must send "guid" parameter with image name !',
       });
     }
     let result;
     try {
-      result = await Image.findOne({ caption: req.body.caption });
+      result = await Image.findOne({ guid: req.body.guid });
       if (!result) {
         return res.status(404).json({
           success: false,
           message:
-            "Image metadata with caption " +
-            req.body.caption +
-            " was not found.",
+            "Image metadata with guid " + req.body.guid + " was not found.",
         });
       }
     } catch (error) {
@@ -308,11 +306,11 @@ module.exports = (upload) => {
     });
   });
   imageRouter.route("/exists").get(async (req, res, next) => {
-    if (!req.body.caption) {
+    if (!req.body.guid) {
       return res.status(400).send();
     }
     try {
-      let result = await Image.findOne({ caption: req.body.caption });
+      let result = await Image.findOne({ guid: req.body.guid });
       if (!result) {
         return res.status(404).send();
       }
@@ -331,13 +329,13 @@ module.exports = (upload) => {
    *         name: file
    *         description: the image file as an attachment (form-data).
    *       - in: query
-   *         name: caption
+   *         name: guid
    *         description: the GUID of the image you want to update
    *      responses:
    *        '200':
    *          description: Successfully updated image
    *        '400':
-   *          description: Malformed request. Must send "caption" parameter with GUID of image to update.
+   *          description: Malformed request. Must send "guid" parameter with GUID of image to update.
    *        '404':
    *          description: Did not find image with provided GUID.
    *        '500':
@@ -353,7 +351,7 @@ module.exports = (upload) => {
         });
       }
 
-      Image.findOne({ caption: req.body.caption })
+      Image.findOne({ guid: req.body.guid })
         .then((image) => {
           if (!image) {
             return res.status(404).json({
@@ -370,10 +368,10 @@ module.exports = (upload) => {
         });
       //Update image metadata
       Image.findOneAndUpdate(
-        { caption: req.body.caption },
+        { guid: req.body.guid },
         {
           $set: {
-            // caption: req.body.caption,
+            // guid: req.body.guid,
             filename: req.file.filename,
             fileId: req.file.id,
           },
@@ -396,7 +394,7 @@ module.exports = (upload) => {
           //Files deleted and image updated. Return success
           return res.status(200).json({
             success: true,
-            message: `Image with caption: ${req.body.caption} updated`,
+            message: `Image with guid: ${req.body.guid} updated`,
           });
         })
         .catch((err) => {
@@ -416,7 +414,7 @@ module.exports = (upload) => {
           message: "Must upload a file !",
         });
       }
-      Image.findOne({ caption: req.body.caption })
+      Image.findOne({ guid: req.body.guid })
         .then((image) => {
           if (!image) {
             return res.status(404).json({
@@ -427,7 +425,7 @@ module.exports = (upload) => {
           console.log("Found image. Updating");
           //Update small image data
           Image.findOneAndUpdate(
-            { caption: req.body.caption },
+            { guid: req.body.guid },
             {
               $set: {
                 smallImageData: req.file.buffer,
@@ -440,7 +438,7 @@ module.exports = (upload) => {
             .then((image) => {
               return res.status(200).json({
                 success: true,
-                message: `Image with caption: ${req.body.caption} updated`,
+                message: `Image with guid: ${req.body.guid} updated`,
               });
             })
             .catch((err) => {
@@ -471,25 +469,25 @@ module.exports = (upload) => {
    *          '200':
    *             description: Successfully deleted image
    *          '400':
-   *             description: Malformed request. Need to have "caption" with the image GUID in the request body.
+   *             description: Malformed request. Need to have "guid" with the image GUID in the request body.
    *          '404':
    *             description: Didn't find file with the requested GUID
    *          '500':
    *             description: Internal server error
    */
   imageRouter.route("/delete").delete((req, res, next) => {
-    if (!req.body.caption) {
+    if (!req.body.guid) {
       return res.status(400).json({
         success: false,
-        message: `Need to have field "caption" in message body !`,
+        message: `Need to have field "guid" in message body !`,
       });
     }
-    Image.findOne({ caption: req.body.caption })
+    Image.findOne({ guid: req.body.guid })
       .then((image) => {
         if (image) {
           console.log("image ID: " + image.fileId);
           if (image.isSmallImage) {
-            deleteFromImageCollection(req.body.caption, res);
+            deleteFromImageCollection(req.body.guid, res);
             return;
           }
           gfs.delete(new mongoose.Types.ObjectId(image.fileId), (err, data) => {
@@ -501,13 +499,13 @@ module.exports = (upload) => {
               });
             }
             console.log(`File with ID ${image.fileId} is deleted`);
-            deleteFromImageCollection(req.body.caption, res);
+            deleteFromImageCollection(req.body.guid, res);
             return;
           });
         } else {
           res.status(404).json({
             success: false,
-            message: `File with caption: ${req.body.caption} not found`,
+            message: `File with guid: ${req.body.guid} not found`,
           });
         }
       })
@@ -519,11 +517,11 @@ module.exports = (upload) => {
       );
   });
   function deleteFromImageCollection(guid, res) {
-    Image.deleteOne({ caption: guid })
+    Image.deleteOne({ guid: guid })
       .then(() => {
         return res.status(200).json({
           success: true,
-          message: `Image with caption: ${guid} deleted`,
+          message: `Image with guid: ${guid} deleted`,
         });
       })
       .catch((err) => {
