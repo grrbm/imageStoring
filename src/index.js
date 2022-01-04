@@ -99,8 +99,13 @@ const storage = new GridFsStorage({
 });
 
 function fileFilter(req, file, cb) {
-  if (file.mimetype !== "image/png") {
-    return cb(new Error("File type must be image/png"), false);
+  if (
+    ["image/png", "image/jpg", "image/jpeg", "image/bmp", "image/gif"].includes(
+      file.mimetype
+    ) === false
+  ) {
+    console.log("File is not an image");
+    //return cb(new Error("File type must be an image"), false);
   }
   cb(null, true);
 }

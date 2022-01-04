@@ -36,6 +36,20 @@ module.exports = (upload) => {
     });
   });
 
+  function minimumSizeCheck(req, res, next) {
+    let minimumSizeBytes = 16777216; //16 megabytes
+    console.log("passed through minimum size check");
+    let len = req.headers["content-length"]
+      ? parseInt(req.headers["content-length"], 10)
+      : null;
+
+    if (len && len > minimumSizeBytes) {
+      console.log("passed minimum size check");
+      next();
+    } else {
+      console.log("failed minimum size check");
+    }
+  }
   /**
    * @swagger
    * /api/create:
@@ -58,7 +72,7 @@ module.exports = (upload) => {
    */
   imageRouter
     .route("/create")
-    .post(upload.single("file"), (req, res, next) => {
+    .post(minimumSizeCheck, upload.single("file"), (req, res, next) => {
       if (!req.file) {
         return res.status(500).json({
           success: false,
