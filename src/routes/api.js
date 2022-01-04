@@ -49,7 +49,6 @@ module.exports = (upload) => {
     } else {
       console.log("failed minimum size check");
       next("route");
-      //createSmallImage(req, res);
     }
   }
   /**
@@ -335,52 +334,89 @@ module.exports = (upload) => {
    *        '500':
    *          description: Internal server error.
    */
-  imageRouter.route("/update").put(upload.single("file"), (req, res, next) => {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Must upload a file !",
-      });
-    }
-
-    //Update image metadata
-    Image.findOneAndUpdate(
-      { caption: req.body.caption },
-      {
-        $set: {
-          // caption: req.body.caption,
-          filename: req.file.filename,
-          fileId: req.file.id,
-        },
-      },
-      //make image parameter return the old object instead of the new
-      { new: false }
-    )
-      .then((image) => {
-        //"image" parameter is the new updated image
-
-        //Done updating metadata, now delete old image files
-        gfs.delete(new mongoose.Types.ObjectId(image.fileId), (err, data) => {
-          if (err) {
-            console.log(
-              "Error finding file in uploads.files collection." + err
-            );
-          }
-          console.log(`Old file with ID ${image.fileId} is deleted`);
-        });
-        //Files deleted and image updated. Return success
-        return res.status(200).json({
-          success: true,
-          message: `Image with caption: ${req.body.caption} updated`,
-        });
-      })
-      .catch((err) => {
-        return res.status(500).json({
+  imageRouter
+    .route("/update")
+    .put(minimumSizeCheck, upload.single("file"), (req, res, next) => {
+      if (!req.file) {
+        return res.status(400).json({
           success: false,
-          message: `Error updating image. ` + err,
+          message: "Must upload a file !",
         });
-      });
-  });
+      }
+
+      //Update image metadata
+      Image.findOneAndUpdate(
+        { caption: req.body.caption },
+        {
+          $set: {
+            // caption: req.body.caption,
+            filename: req.file.filename,
+            fileId: req.file.id,
+          },
+        },
+        //make image parameter return the old object instead of the new
+        { new: false }
+      )
+        .then((image) => {
+          //"image" parameter is the new updated image
+
+          //Done updating metadata, now delete old image files
+          gfs.delete(new mongoose.Types.ObjectId(image.fileId), (err, data) => {
+            if (err) {
+              console.log(
+                "Error finding file in uploads.files collection." + err
+              );
+            }
+            console.log(`Old file with ID ${image.fileId} is deleted`);
+          });
+          //Files deleted and image updated. Return success
+          return res.status(200).json({
+            success: true,
+            message: `Image with caption: ${req.body.caption} updated`,
+          });
+        })
+        .catch((err) => {
+          return res.status(500).json({
+            success: false,
+            message: `Error updating image. ` + err,
+          });
+        });
+    });
+
+  imageRouter
+    .route("/update")
+    .put(multer({}).single("file"), (req, res, next) => {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Must upload a file !",
+        });
+      }
+      //Update small image data
+      Image.findOneAndUpdate(
+        { caption: req.body.caption },
+        {
+          $set: {
+            smallImageData: req.file.buffer,
+            smallImageMimetype: req.file.mimetype,
+          },
+        },
+        //make image parameter return the old object instead of the new
+        { new: false }
+      )
+        .then((image) => {
+          return res.status(200).json({
+            success: true,
+            message: `Image with caption: ${req.body.caption} updated`,
+          });
+        })
+        .catch((err) => {
+          return res.status(500).json({
+            success: false,
+            message: `Error updating image. ` + err,
+          });
+        });
+    });
 
   /**
    * @swagger
@@ -412,6 +448,10 @@ module.exports = (upload) => {
       .then((image) => {
         if (image) {
           console.log("image ID: " + image.fileId);
+          if (image.isSmallImage) {
+            deleteFromImageCollection(req.body.caption, res);
+            return;
+          }
           gfs.delete(new mongoose.Types.ObjectId(image.fileId), (err, data) => {
             if (err) {
               return res.status(404).json({
@@ -421,19 +461,8 @@ module.exports = (upload) => {
               });
             }
             console.log(`File with ID ${image.fileId} is deleted`);
-            Image.deleteOne({ caption: req.body.caption })
-              .then(() => {
-                return res.status(200).json({
-                  success: true,
-                  message: `Image with caption: ${req.body.caption} deleted`,
-                });
-              })
-              .catch((err) => {
-                return res.status(500).json({
-                  success: false,
-                  message: `Error deleting the image. ` + err,
-                });
-              });
+            deleteFromImageCollection(req.body.caption, res);
+            return;
           });
         } else {
           res.status(404).json({
@@ -449,6 +478,21 @@ module.exports = (upload) => {
         })
       );
   });
+  function deleteFromImageCollection(guid, res) {
+    Image.deleteOne({ caption: guid })
+      .then(() => {
+        return res.status(200).json({
+          success: true,
+          message: `Image with caption: ${guid} deleted`,
+        });
+      })
+      .catch((err) => {
+        return res.status(500).json({
+          success: false,
+          message: `Error deleting the image. ` + err,
+        });
+      });
+  }
 
   imageRouter.route("/recent").get((req, res, next) => {
     Image.findOne({}, {}, { sort: { _id: -1 } })
