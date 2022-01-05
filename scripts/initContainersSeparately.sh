@@ -1,11 +1,11 @@
 #!/bin/sh
 docker container kill $(docker ps -q)
 docker system prune -f
-docker volume rm data
+docker volume rm data #run this command if you want to completely restart the database, clearing all data
 echo "done killing all running containers"
 docker network create mern-net
 echo "created network mern-net"
-docker run --name mongodb -v /"$(pwd)"/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js -v data:/data/db --rm -d -p 27017:27017 --network mern-net mongo
+docker run --name mongodb -v /"$(pwd)"/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js -v data:/data/db --rm -d -p 27017:27017 --network mern-net mongo --bind_ip 0.0.0.0
 echo "done creating mongodb instance"
 docker build -t image-storing ../
 echo "done building"
