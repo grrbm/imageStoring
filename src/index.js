@@ -135,6 +135,7 @@ app.get("/", (req, res) => {
 });
 
 const port = process.env.APP_PORT || 8080;
+const app_host = process.env.APP_HOST || "0.0.0.0";
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`Example app listening at http://${app_host}:${port}`);
 });
