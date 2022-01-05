@@ -11,7 +11,7 @@ services:
               - MONGODB_USERNAME=myUserAdmin
               - MONGODB_PASSWORD=pass
               - APP_PORT=8080
-              - APP_HOST=localhost
+              - APP_HOST=0.0.0.0
               - DAT_HOST=mongodb
               - DAT_PORT=27017
               - SHOULD_FORCE_GRIDFS=false
