@@ -8,6 +8,8 @@ WORKDIR /srv/app/admin-server
 #INSTALL CURL
 RUN apk add --no-cache curl
 
+EXPOSE 8080
+
 #3
 COPY package.json /srv/app/admin-server
 COPY package-lock.json /srv/app/admin-server
