@@ -356,6 +356,12 @@ module.exports = (upload) => {
           message: "Must upload a file !",
         });
       }
+      if (!req.body.guid) {
+        return res.status(400).json({
+          success: false,
+          message: "Must provide GUID of image to update !",
+        });
+      }
 
       Image.findOne({ guid: req.body.guid })
         .then((image) => {
@@ -418,6 +424,12 @@ module.exports = (upload) => {
         return res.status(400).json({
           success: false,
           message: "Must upload a file !",
+        });
+      }
+      if (!req.body.guid) {
+        return res.status(400).json({
+          success: false,
+          message: "Must provide GUID of image to update !",
         });
       }
       Image.findOne({ guid: req.body.guid })
