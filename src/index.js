@@ -120,29 +120,32 @@ function fileFilter(req, file, cb) {
     return;
   }
   //if it's an Update request, don't check if image already exists.
-  if (!req.method === "PUT") {
-    Image.findOne({ guid: req.body.guid })
-      .then((image) => {
-        if (image) {
-          console.log("Image already exists. Will not upload.");
-          const error = new Error("Image already exists.  Will not upload.");
-          error.code = 409;
-          cb(error);
-          return;
-        }
-        console.log("Image does not exist. Will upload.");
-        cb(null, true);
-      })
-      .catch((err) => {
-        const error = new Error(
-          "Could not find image with guid: " + req.body.guid
-        );
-        error.code = 404;
-        cb(error);
-      });
+  if (req.method === "PUT") {
+    cb(null, true);
+    return;
   }
+  Image.findOne({ guid: req.body.guid })
+    .then((image) => {
+      if (image) {
+        console.log("Image already exists. Will not upload.");
+        const error = new Error("Image already exists.  Will not upload.");
+        error.code = 409;
+        cb(error);
+        return;
+      }
+      console.log("Image does not exist. Will upload.");
+      cb(null, true);
+    })
+    .catch((err) => {
+      const error = new Error(
+        "Could not find image with guid: " + req.body.guid
+      );
+      error.code = 404;
+      cb(error);
+    });
 
   // To accept the file pass `true`, like so:
+  //cb(null, true)
 
   // To reject this file pass `false`, like so:
   //cb(null, false)
