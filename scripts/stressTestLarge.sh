@@ -1,6 +1,9 @@
 #!/bin/sh
 
-for counter in {1..10}; 
+#To find more large images to test with,
+#visit: https://svs.gsfc.nasa.gov/vis/a030000/a030800/a030877/frames/5760x3240_16x9_01p/
+
+for counter in {1..100}; 
 do
 ((++counter))
 i=0
