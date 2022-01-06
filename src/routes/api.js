@@ -43,7 +43,7 @@ module.exports = (upload) => {
       ? parseInt(req.headers["content-length"], 10)
       : null;
 
-    if (process.env.SHOULD_FORCE_GRIDFS.toLowerCase() === true) {
+    if (process.env.SHOULD_FORCE_GRIDFS.toLowerCase() === "true") {
       console.log(
         "[size check]: SHOULD_FORCE_GRIDFS is set to true. Forcing the use of GridFS"
       );
