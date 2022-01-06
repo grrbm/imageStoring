@@ -9,6 +9,7 @@ const config = require("./config");
 const multer = require("multer");
 const { GridFsStorage } = require("multer-gridfs-storage");
 const crypto = require("crypto");
+const Image = require("./models/image");
 const cors = require("cors");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
@@ -48,7 +49,7 @@ app.use(
 );
 app.use(logger("dev"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
@@ -107,7 +108,47 @@ function fileFilter(req, file, cb) {
     console.log("File is not an image");
     //return cb(new Error("File type must be an image"), false);
   }
-  cb(null, true);
+  if (!req.body.guid) {
+    console.log(
+      "No guid provided or guid after file param. Guid param must come before file param and must not be empty."
+    );
+    const err = new Error(
+      "No guid provided or guid after file param. Guid param must come before file param and must not be empty."
+    );
+    err.code = 400;
+    cb(err);
+    return;
+  }
+  //if it's an Update request, don't check if image already exists.
+  if (!req.method === "PUT") {
+    Image.findOne({ guid: req.body.guid })
+      .then((image) => {
+        if (image) {
+          console.log("Image already exists. Will not upload.");
+          const error = new Error("Image already exists.  Will not upload.");
+          error.code = 409;
+          cb(error);
+          return;
+        }
+        console.log("Image does not exist. Will upload.");
+        cb(null, true);
+      })
+      .catch((err) => {
+        const error = new Error(
+          "Could not find image with guid: " + req.body.guid
+        );
+        error.code = 404;
+        cb(error);
+      });
+  }
+
+  // To accept the file pass `true`, like so:
+
+  // To reject this file pass `false`, like so:
+  //cb(null, false)
+
+  // You can always pass an error if something goes wrong:
+  //cb(new Error('I don\'t have a clue!'))
 }
 
 const upload = multer({ storage, fileFilter });

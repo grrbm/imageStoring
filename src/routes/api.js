@@ -67,11 +67,11 @@ module.exports = (upload) => {
    *      description: Upload a single image/file to Image collection
    *      parameters:
    *      - in: query
-   *        name: file
-   *        description: the image file as an attachment (form-data).
-   *      - in: query
    *        name: guid
    *        description: the GUID of the image you want to read
+   *      - in: query
+   *        name: file
+   *        description: the image file as an attachment (form-data).
    *      responses:
    *        '200':
    *           description: Successfully uploaded image
@@ -82,7 +82,13 @@ module.exports = (upload) => {
    */
   imageRouter
     .route("/create")
-    .post(minimumSizeCheck, upload.single("file"), (req, res, next) => {
+    .post(minimumSizeCheck, uploadFile, (req, res, next) => {
+      if (req.fileFilterError) {
+        return res.status(req.fileFilterErrorCode).json({
+          success: false,
+          message: req.fileFilterError,
+        });
+      }
       if (!req.file) {
         return res.status(500).json({
           success: false,
@@ -314,11 +320,11 @@ module.exports = (upload) => {
    *      description: Accepts image (using multipart/form-data) and return image GUID in JSON
    *      parameters:
    *       - in: query
-   *         name: file
-   *         description: the image file as an attachment (form-data).
-   *       - in: query
    *         name: guid
    *         description: the GUID of the image you want to update
+   *       - in: query
+   *         name: file
+   *         description: the image file as an attachment (form-data).
    *      responses:
    *        '200':
    *          description: Successfully updated image
@@ -530,6 +536,21 @@ module.exports = (upload) => {
           message: `Error deleting the image. ` + err,
         });
       });
+  }
+  function uploadFile(req, res, next) {
+    const uploadTheFile = upload.single("file");
+
+    uploadTheFile(req, res, function (err) {
+      if (err instanceof multer.MulterError) {
+        // A Multer error occurred when uploading.
+      } else if (err) {
+        // An unknown error occurred when uploading.
+        req.fileFilterError = err.message;
+        req.fileFilterErrorCode = err.code;
+      }
+      // Everything went fine.
+      next();
+    });
   }
 
   // imageRouter.route("/recent").get((req, res, next) => {
