@@ -205,23 +205,20 @@ module.exports = (upload) => {
    *             description: Internal server error.
    */
   imageRouter.route("/read/:guid").get(async (req, res, next) => {
-    if (req.params.guid) {
-      req.body.guid = req.params.guid;
-    }
-    if (!req.body.guid) {
+    if (!req.params.guid) {
       return res.status(400).json({
         success: false,
-        message: 'Must send "guid" parameter with image name !',
+        message: 'Must send "guid" parameter in URL with image name !',
       });
     }
     let result;
     try {
-      result = await Image.findOne({ guid: req.body.guid });
+      result = await Image.findOne({ guid: req.params.guid });
       if (!result) {
         return res.status(404).json({
           success: false,
           message:
-            "Image metadata with guid " + req.body.guid + " was not found.",
+            "Image metadata with guid " + req.params.guid + " was not found.",
         });
       }
     } catch (error) {
@@ -535,107 +532,107 @@ module.exports = (upload) => {
       });
   }
 
-  imageRouter.route("/recent").get((req, res, next) => {
-    Image.findOne({}, {}, { sort: { _id: -1 } })
-      .then((image) => {
-        res.status(200).json({
-          success: true,
-          image,
-        });
-      })
-      .catch((err) => res.status(500).json(err));
-  });
+  // imageRouter.route("/recent").get((req, res, next) => {
+  //   Image.findOne({}, {}, { sort: { _id: -1 } })
+  //     .then((image) => {
+  //       res.status(200).json({
+  //         success: true,
+  //         image,
+  //       });
+  //     })
+  //     .catch((err) => res.status(500).json(err));
+  // });
 
-  imageRouter
-    .route("/multiple")
-    .post(upload.array("file", 3), (req, res, next) => {
-      res.status(200).json({
-        success: true,
-        message: `${req.files.length} files uploaded successfully`,
-      });
-    });
+  // imageRouter
+  //   .route("/multiple")
+  //   .post(upload.array("file", 3), (req, res, next) => {
+  //     res.status(200).json({
+  //       success: true,
+  //       message: `${req.files.length} files uploaded successfully`,
+  //     });
+  //   });
 
-  imageRouter.route("/files").get((req, res, next) => {
-    gfs.find().toArray((err, files) => {
-      if (!files || files.length === 0) {
-        return res.status(200).json({
-          success: false,
-          message: "No files available",
-        });
-      }
+  // imageRouter.route("/files").get((req, res, next) => {
+  //   gfs.find().toArray((err, files) => {
+  //     if (!files || files.length === 0) {
+  //       return res.status(200).json({
+  //         success: false,
+  //         message: "No files available",
+  //       });
+  //     }
 
-      files.map((file) => {
-        if (
-          file.contentType === "image/jpeg" ||
-          file.contentType === "image/png" ||
-          file.contentType === "image/svg"
-        ) {
-          file.isImage = true;
-        } else {
-          file.isImage = false;
-        }
-      });
+  //     files.map((file) => {
+  //       if (
+  //         file.contentType === "image/jpeg" ||
+  //         file.contentType === "image/png" ||
+  //         file.contentType === "image/svg"
+  //       ) {
+  //         file.isImage = true;
+  //       } else {
+  //         file.isImage = false;
+  //       }
+  //     });
 
-      res.status(200).json({
-        success: true,
-        files,
-      });
-    });
-  });
+  //     res.status(200).json({
+  //       success: true,
+  //       files,
+  //     });
+  //   });
+  // });
 
-  imageRouter.route("/file/:filename").get((req, res, next) => {
-    gfs.find({ filename: req.params.filename }).toArray((err, files) => {
-      if (!files[0] || files.length === 0) {
-        return res.status(200).json({
-          success: false,
-          message: "No files available",
-        });
-      }
+  // imageRouter.route("/file/:filename").get((req, res, next) => {
+  //   gfs.find({ filename: req.params.filename }).toArray((err, files) => {
+  //     if (!files[0] || files.length === 0) {
+  //       return res.status(200).json({
+  //         success: false,
+  //         message: "No files available",
+  //       });
+  //     }
 
-      res.status(200).json({
-        success: true,
-        file: files[0],
-      });
-    });
-  });
+  //     res.status(200).json({
+  //       success: true,
+  //       file: files[0],
+  //     });
+  //   });
+  // });
 
-  imageRouter.route("/:filename").get((req, res, next) => {
-    gfs.find({ filename: req.params.filename }).toArray((err, files) => {
-      if (!files[0] || files.length === 0) {
-        return res.status(200).json({
-          success: false,
-          message: "No files available",
-        });
-      }
+  // imageRouter.route("/:filename").get((req, res, next) => {
+  //   gfs.find({ filename: req.params.filename }).toArray((err, files) => {
+  //     if (!files[0] || files.length === 0) {
+  //       return res.status(200).json({
+  //         success: false,
+  //         message: "No files available",
+  //       });
+  //     }
 
-      if (
-        files[0].contentType === "image/jpeg" ||
-        files[0].contentType === "image/png" ||
-        files[0].contentType === "image/svg+xml"
-      ) {
-        // render image to browser
-        gfs.openDownloadStreamByName(req.params.filename).pipe(res);
-      } else {
-        res.status(404).json({
-          err: "Not an image",
-        });
-      }
-    });
-  });
+  //     if (
+  //       files[0].contentType === "image/jpeg" ||
+  //       files[0].contentType === "image/png" ||
+  //       files[0].contentType === "image/svg+xml"
+  //     ) {
+  //       // render image to browser
+  //       gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+  //     } else {
+  //       res.status(404).json({
+  //         err: "Not an image",
+  //       });
+  //     }
+  //   });
+  // });
 
-  imageRouter.route("/file/del/:id").post((req, res, next) => {
-    console.log(req.params.id);
-    gfs.delete(new mongoose.Types.ObjectId(req.params.id), (err, data) => {
-      if (err) {
-        return res.status(404).json({ err: err });
-      }
+  // imageRouter.route("/file/del/:id").post((req, res, next) => {
+  //   console.log(req.params.id);
+  //   gfs.delete(new mongoose.Types.ObjectId(req.params.id), (err, data) => {
+  //     if (err) {
+  //       return res.status(404).json({ err: err });
+  //     }
 
-      res.status(200).json({
-        success: true,
-        message: `File with ID ${req.params.id} is deleted`,
-      });
-    });
-  });
+  //     res.status(200).json({
+  //       success: true,
+  //       message: `File with ID ${req.params.id} is deleted`,
+  //     });
+  //   });
+  // });
 
   return imageRouter;
 };
