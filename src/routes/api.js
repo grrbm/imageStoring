@@ -112,7 +112,7 @@ module.exports = (upload) => {
             .then((image) => {
               res.status(200).json({
                 success: true,
-                image,
+                guid: req.body.guid,
               });
             })
             .catch((err) =>
@@ -126,21 +126,6 @@ module.exports = (upload) => {
           res.status(500).json({
             success: false,
             message: "Error finding image. " + err,
-          })
-        );
-    })
-    .get((req, res, next) => {
-      Image.find({})
-        .then((images) => {
-          res.status(200).json({
-            success: true,
-            images,
-          });
-        })
-        .catch((err) =>
-          res.status(500).json({
-            success: false,
-            message: "Error finding all images. " + err,
           })
         );
     });
@@ -180,7 +165,7 @@ module.exports = (upload) => {
             .then((image) => {
               res.status(200).json({
                 success: true,
-                image,
+                guid: req.body.guid,
               });
             })
             .catch((err) =>
