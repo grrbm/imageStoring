@@ -5,7 +5,7 @@ docker volume rm data #run this command if you want to completely restart the da
 echo "done killing all running containers"
 docker network create mern-net
 echo "created network mern-net"
-docker run --name mongodb -v /"$(pwd)"/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js -v data:/data/db --rm -d -p 27018:27017 --network mern-net mongo --bind_ip 0.0.0.0 --port 27018
+docker run --name mongodb -v /"$(pwd)"/mongoCfg:/etc/mongo -v /"$(pwd)"/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js -v data:/data/db --rm -d -p 27018:27017 --network mern-net mongo --config //etc/mongo/mongod.conf
 echo "done creating mongodb instance"
 docker build -t image-storing ../
 echo "done building"
