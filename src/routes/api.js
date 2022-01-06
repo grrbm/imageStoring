@@ -469,8 +469,8 @@ module.exports = (upload) => {
    *      description: Delete an image from the collection
    *      parameters:
    *        - in: query
-   *          name: file
-   *          description: the image file as an attachment (form-data).
+   *          name: guid
+   *          description: the GUID of the image you want to delete
    *      responses:
    *          '200':
    *             description: Successfully deleted image
